@@ -2,7 +2,7 @@ package discord
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/kn-lim/seigetsu-bot/internal/iac"
+	"github.com/kn-lim/seigetsu-bot/internal/pixelmon"
 )
 
 var (
@@ -37,21 +37,21 @@ var (
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: iac.GetStatus(),
+						Content: pixelmon.GetStatus(),
 					},
 				})
 			case "start":
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: iac.Start(),
+						Content: pixelmon.Start(),
 					},
 				})
 			case "stop":
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: iac.Stop(),
+						Content: pixelmon.Stop(),
 					},
 				})
 			}
