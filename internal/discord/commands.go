@@ -1,6 +1,8 @@
 package discord
 
 import (
+	"log"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/kn-lim/seigetsu-bot/internal/pixelmon"
 )
@@ -34,6 +36,8 @@ var (
 		"pixelmon": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			switch i.ApplicationCommandData().Options[0].Name {
 			case "status":
+				log.Println("/pixelmon status")
+
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
@@ -41,6 +45,8 @@ var (
 					},
 				})
 			case "start":
+				log.Println("/pixelmon start")
+
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
@@ -48,6 +54,8 @@ var (
 					},
 				})
 			case "stop":
+				log.Println("/pixelmon stop")
+
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{

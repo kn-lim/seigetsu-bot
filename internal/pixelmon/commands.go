@@ -3,17 +3,22 @@ package pixelmon
 import (
 	"errors"
 	"log"
+	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
 func GetStatus() string {
-	svc, err := getEC2Session()
+	sess, err := getSession()
 	if err != nil {
 		return err.Error()
 	}
+
+	svc := ec2.New(sess)
 
 	result, err := getPixelmonServer(svc)
 	if err != nil {
@@ -33,10 +38,12 @@ func GetStatus() string {
 }
 
 func Start() string {
-	svc, err := getEC2Session()
+	sess, err := getSession()
 	if err != nil {
 		return err.Error()
 	}
+
+	svc := ec2.New(sess)
 
 	result, err := getPixelmonServer(svc)
 	if err != nil {
@@ -58,7 +65,9 @@ func Start() string {
 					return Message[Err_Start]
 				}
 
-				return Message[Starting]
+				PixelmonInstanceID = *instance.InstanceId
+
+				return StartPixelmonService()
 			}
 		}
 	}
@@ -67,10 +76,12 @@ func Start() string {
 }
 
 func Stop() string {
-	svc, err := getEC2Session()
+	sess, err := getSession()
 	if err != nil {
 		return err.Error()
 	}
+
+	svc := ec2.New(sess)
 
 	result, err := getPixelmonServer(svc)
 	if err != nil {
@@ -100,16 +111,72 @@ func Stop() string {
 	return Message[Not_Found]
 }
 
-func getEC2Session() (*ec2.EC2, error) {
+func StartPixelmonService() string {
+	sess, err := getSession()
+	if err != nil {
+		return err.Error()
+	}
+
+	ec2Svc := ec2.New(sess)
+
+	for {
+		input := &ec2.DescribeInstancesInput{
+			InstanceIds: []*string{aws.String(PixelmonInstanceID)},
+		}
+
+		result, err := ec2Svc.DescribeInstances(input)
+		if err != nil {
+			return err.Error()
+		}
+
+		if len(result.Reservations) == 0 || len(result.Reservations[0].Instances) == 0 {
+			return Message[Not_Found]
+		}
+
+		state := result.Reservations[0].Instances[0].State.Name
+		if *state == ec2.InstanceStateNameRunning {
+			break
+		}
+
+		time.Sleep(10 * time.Second)
+	}
+
+	ssmSvc := ssm.New(sess)
+
+	document := "AWS-RunShellScript"
+	commands := []string{"screen -S mc -d -m 'java -Xms3G -Xmx3G -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=50 -XX:+AlwaysPreTouch -jar forge-1.16.5-36.2.39.jar nogui'"}
+
+	ptrCmds := make([]*string, len(commands))
+	for i, cmd := range commands {
+		ptrCmds[i] = aws.String(cmd)
+	}
+
+	input := &ssm.SendCommandInput{
+		InstanceIds:  []*string{&PixelmonInstanceID},
+		DocumentName: &document,
+		Parameters: map[string][]*string{
+			"commands": ptrCmds,
+		},
+	}
+
+	_, err = ssmSvc.SendCommand(input)
+	if err != nil {
+		return err.Error()
+	}
+
+	return Message[Starting]
+}
+
+func getSession() (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-west-1"),
+		Region: aws.String(os.Getenv("PIXELMON_REGION")),
 	})
 	if err != nil {
 		log.Printf("Error creating AWS session: %v", err)
 		return nil, errors.New("Error creating AWS session")
 	}
 
-	return ec2.New(sess), nil
+	return sess, nil
 }
 
 func getPixelmonServer(svc *ec2.EC2) (*ec2.DescribeInstancesOutput, error) {
@@ -118,7 +185,7 @@ func getPixelmonServer(svc *ec2.EC2) (*ec2.DescribeInstancesOutput, error) {
 		Filters: []*ec2.Filter{
 			{
 				Name:   aws.String("tag:Name"),
-				Values: []*string{aws.String("pixelmon")},
+				Values: []*string{aws.String(os.Getenv("PIXELMON_TAG"))},
 			},
 		},
 	}

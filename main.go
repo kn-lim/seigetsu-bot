@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
+
 	"github.com/kn-lim/seigetsu-bot/internal/discord"
 )
 
@@ -53,6 +54,7 @@ func main() {
 		if err != nil {
 			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
 		}
+		log.Printf("Added '%v' command", v.Name)
 		registeredCommands[i] = cmd
 	}
 
@@ -70,6 +72,7 @@ func main() {
 			if err != nil {
 				log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
 			}
+			log.Printf("Removed '%v' command", v.Name)
 		}
 	}
 
