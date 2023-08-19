@@ -7,5 +7,6 @@ _Currently under development_
 | Name | Description |
 |-|-|
 | `DISCORD_BOT_TOKEN` | Discord Bot Token |
-| `PIXELMON_REGION` | AWS Region of the Pixelmon EC2 Instance |
-| `PIXELMON_TAG` | AWS Name Tag of the Pixelmon EC2 Instance |
+| `RCON_PASSWORD` | RCON Password of Pixelmon Service |
+| `PIXELMON_REGION` | AWS Region of Pixelmon EC2 Instance |
+| `PIXELMON_NAME` | AWS Name Tag of Pixelmon EC2 Instance |

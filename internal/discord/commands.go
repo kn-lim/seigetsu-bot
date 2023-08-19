@@ -38,10 +38,15 @@ var (
 			case "status":
 				log.Println("/pixelmon status")
 
+				msg, err := pixelmon.GetStatus()
+				if err != nil {
+					msg = err.Error()
+				}
+
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: pixelmon.GetStatus(),
+						Content: msg,
 					},
 				})
 			case "start":
@@ -50,18 +55,30 @@ var (
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: pixelmon.Start(),
+						Content: pixelmon.Message[pixelmon.Starting],
 					},
 				})
+
+				// Start Pixelmon EC2 Instance
+				pixelmon.Start()
+
+				// Start Pixelmon service
+				pixelmon.StartPixelmon()
 			case "stop":
 				log.Println("/pixelmon stop")
 
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: pixelmon.Stop(),
+						Content: pixelmon.Message[pixelmon.Stopping],
 					},
 				})
+
+				// Stop Pixelmon service
+				pixelmon.StopPixelmon()
+
+				// Stop Pixelmon EC2 Instance
+				pixelmon.Stop()
 			}
 		},
 	}

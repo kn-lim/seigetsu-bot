@@ -1,7 +1,5 @@
 package pixelmon
 
-import "github.com/aws/aws-sdk-go/aws/session"
-
 const (
 	Online = iota
 	Offline
@@ -13,10 +11,9 @@ const (
 	Err_Stop
 )
 
-var (
-	PixelmonInstanceID string
-	Session            *session.Session
+const statusURL = "https://api.mcstatus.io/v2/status/java/pixelmon.knlim.dev"
 
+var (
 	Message = []string{
 		":green_circle: Pixelmon is online :green_circle:",
 		":red_circle: Pixelmon is offline :red_circle:",

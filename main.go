@@ -39,6 +39,8 @@ func init() {
 }
 
 func main() {
+	log.Printf("Name: %v, Instance ID: %v, Region: %v", os.Getenv("PIXELMON_NAME"), os.Getenv("PIXELMON_INSTANCE_ID"), os.Getenv("PIXELMON_REGION"))
+
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
