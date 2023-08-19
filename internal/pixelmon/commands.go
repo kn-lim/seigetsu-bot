@@ -33,6 +33,8 @@ func GetStatus() (string, error) {
 }
 
 func Start() error {
+	log.Println("Starting Pixelmon EC2 instance")
+
 	// Setup AWS Session
 	sess, err := getSession()
 	if err != nil {
@@ -64,6 +66,8 @@ func Start() error {
 }
 
 func Stop() error {
+	log.Println("Stoppping Pixelmon EC2 instance")
+
 	// Setup AWS Session
 	sess, err := getSession()
 	if err != nil {
@@ -95,6 +99,8 @@ func Stop() error {
 }
 
 func StartPixelmon() error {
+	log.Println("Starting Pixelmon service")
+
 	// Wait till Pixelmon EC2 instance is running
 	for {
 		msg, err := GetStatus()
@@ -119,7 +125,7 @@ func StartPixelmon() error {
 	svc := ssm.New(sess)
 	documentName := "AWS-RunShellScript"
 	params := map[string][]*string{
-		"commands": {aws.String("cd /opt/pixelmon/ && tmux new-session -d -s minecraft './start.sh'")},
+		"commands": {aws.String("touch /tmp/hello.txt && cd /opt/pixelmon/ && tmux new-session -d -s minecraft './start.sh'")},
 	}
 	input := &ssm.SendCommandInput{
 		InstanceIds:  []*string{aws.String(os.Getenv("PIXELMON_INSTANCE_ID"))},
@@ -131,10 +137,14 @@ func StartPixelmon() error {
 		return err
 	}
 
+	log.Println("Finished sending command to Pixelmon EC2 instance")
+
 	return nil
 }
 
 func StopPixelmon() error {
+	log.Println("Stopping Pixelmon service")
+
 	// Wait till Pixelmon EC2 instance is running
 	for {
 		msg, err := GetStatus()
