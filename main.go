@@ -14,7 +14,6 @@ import (
 // Bot parameters
 var (
 	GuildID        = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
-	BotToken       = flag.String("token", "", "Bot access token")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutting down or not")
 )
 
@@ -24,7 +23,7 @@ func init() { flag.Parse() }
 
 func init() {
 	var err error
-	s, err = discordgo.New("Bot " + *BotToken)
+	s, err = discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
 	if err != nil {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}
@@ -39,7 +38,7 @@ func init() {
 }
 
 func main() {
-	log.Printf("Name: %v, Instance ID: %v, Region: %v", os.Getenv("PIXELMON_NAME"), os.Getenv("PIXELMON_INSTANCE_ID"), os.Getenv("PIXELMON_REGION"))
+	log.Printf("Name: %v, Instance ID: %v, Region: %v, Domain: %v, Subdomain: %v, Hosted Zone ID: %v", os.Getenv("PIXELMON_NAME"), os.Getenv("PIXELMON_INSTANCE_ID"), os.Getenv("PIXELMON_REGION"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN"), os.Getenv("PIXELMON_HOSTED_ZONE_ID"))
 
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)

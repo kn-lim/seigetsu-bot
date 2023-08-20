@@ -1,105 +1,109 @@
 package pixelmon
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/kn-lim/seigetsu-bot/internal/mcstatus"
 )
 
 func GetStatus() (string, error) {
 	// Setup AWS Session
-	sess, err := getSession()
+	cfg, err := getConfig()
 	if err != nil {
 		return "", err
 	}
 
 	// Get Pixelmon EC2 instance
-	_, instance, err := getPixelmonServer(sess)
+	_, instance, err := getPixelmonServer(cfg)
 	if err != nil {
 		return "", err
 	}
 
 	// Get Pixelmon EC2 instance status
-	if *instance.State.Name == "running" {
+	if instance.State.Name == "running" {
 		return Message[Online], nil
 	}
 	return Message[Offline], nil
 }
 
 func Start() error {
-	log.Println("Starting Pixelmon EC2 instance")
+	log.Println("Starting Pixelmon EC2 instance...")
 
 	// Setup AWS Session
-	sess, err := getSession()
+	cfg, err := getConfig()
 	if err != nil {
 		return err
 	}
 
 	// Get Pixelmon EC2 instance
-	svc, instance, err := getPixelmonServer(sess)
+	client, instance, err := getPixelmonServer(cfg)
 	if err != nil {
 		return err
 	}
 
 	// Start Pixelmon EC2 instance
-	if *instance.State.Name == "running" {
+	if instance.State.Name == "running" {
 		return errors.New(Message[Online])
-	} else if *instance.State.Name == "stopped" {
-		startInput := &ec2.StartInstancesInput{
-			InstanceIds: []*string{instance.InstanceId},
+	} else if instance.State.Name == "stopped" {
+		input := &ec2.StartInstancesInput{
+			InstanceIds: []string{*instance.InstanceId},
 		}
 
-		_, err := svc.StartInstances(startInput)
+		_, err := client.StartInstances(context.TODO(), input)
 		if err != nil {
 			log.Printf("Failed to start pixelmon: %v", err)
 			return errors.New(Message[Err_Start])
 		}
 	}
 
+	log.Println("Started Pixelmon EC2 instance")
+
 	return nil
 }
 
 func Stop() error {
-	log.Println("Stoppping Pixelmon EC2 instance")
+	log.Println("Stopping Pixelmon EC2 instance")
 
 	// Setup AWS Session
-	sess, err := getSession()
+	cfg, err := getConfig()
 	if err != nil {
 		return err
 	}
 
 	// Get Pixelmon EC2 instance
-	svc, instance, err := getPixelmonServer(sess)
+	client, instance, err := getPixelmonServer(cfg)
 	if err != nil {
 		return err
 	}
 
 	// Stop Pixelmon
-	if *instance.State.Name == "stopped" {
+	if instance.State.Name == "stopped" {
 		return errors.New(Message[Offline])
-	} else if *instance.State.Name == "running" {
-		stopInput := &ec2.StopInstancesInput{
-			InstanceIds: []*string{instance.InstanceId},
+	} else if instance.State.Name == "running" {
+		input := &ec2.StopInstancesInput{
+			InstanceIds: []string{*instance.InstanceId},
 		}
 
-		_, err := svc.StopInstances(stopInput)
+		_, err := client.StopInstances(context.TODO(), input)
 		if err != nil {
 			log.Printf("Failed to stop pixelmon: %v", err)
 			return errors.New(Message[Err_Stop])
 		}
 	}
 
+	log.Println("Stopped Pixelmon EC2 instance")
+
 	return nil
 }
 
 func StartPixelmon() error {
-	log.Println("Starting Pixelmon service")
+	log.Println("Starting Pixelmon service...")
 
 	// Wait till Pixelmon EC2 instance is running
 	for {
@@ -112,32 +116,69 @@ func StartPixelmon() error {
 			break
 		}
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(delay * time.Second)
 	}
 
 	log.Println("Pixelmon EC2 instance is running")
 
-	// Send start command to Pixelmon EC2 instance
-	sess, err := getSession()
+	// Check if Pixelmon service is already running
+	isOnline, _, err := mcstatus.GetMCStatus()
 	if err != nil {
 		return err
 	}
-	svc := ssm.New(sess)
-	documentName := "AWS-RunShellScript"
-	params := map[string][]*string{
-		"commands": {aws.String("touch /tmp/hello.txt && cd /opt/pixelmon/ && tmux new-session -d -s minecraft './start.sh'")},
+	if isOnline {
+		log.Printf("%v.%v is online", os.Getenv("PIXELMON_SUBDOMAIN"), os.Getenv("PIXELMON_DOMAIN"))
+		return nil
 	}
-	input := &ssm.SendCommandInput{
-		InstanceIds:  []*string{aws.String(os.Getenv("PIXELMON_INSTANCE_ID"))},
-		DocumentName: &documentName,
-		Parameters:   params,
-	}
-	_, err = svc.SendCommand(input)
+
+	cfg, err := getConfig()
 	if err != nil {
 		return err
 	}
 
-	log.Println("Finished sending command to Pixelmon EC2 instance")
+	// Create Pixelmon DNS Entry
+	_, instance, err := getPixelmonServer(cfg)
+	if err != nil {
+		return err
+	}
+	createPixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN"))
+
+	log.Println("Sending command to Pixelmon EC2 instance...")
+
+	// Send start command to Pixelmon EC2 instance
+	client := ssm.NewFromConfig(cfg)
+	documentName := "AWS-RunShellScript"
+	params := map[string][]string{
+		"commands": {"cd /opt/pixelmon/ && tmux new-session -d -s minecraft './start.sh'"},
+	}
+	input := &ssm.SendCommandInput{
+		InstanceIds:  []string{os.Getenv("PIXELMON_INSTANCE_ID")},
+		DocumentName: &documentName,
+		Parameters:   params,
+	}
+	_, err = client.SendCommand(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Sent command to Pixelmon EC2 instance")
+
+	for {
+		isOnline, _, err := mcstatus.GetMCStatus()
+		if err != nil {
+			return err
+		}
+
+		if isOnline {
+			log.Printf("%v.%v is online", os.Getenv("PIXELMON_SUBDOMAIN"), os.Getenv("PIXELMON_DOMAIN"))
+			break
+		}
+
+		log.Println("Waiting for Pixelmon service to start...")
+		time.Sleep(delay * time.Second)
+	}
+
+	log.Println("Started Pixelmon service")
 
 	return nil
 }
@@ -156,63 +197,54 @@ func StopPixelmon() error {
 			break
 		}
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(delay * time.Second)
 	}
 
 	log.Println("Pixelmon EC2 instance is running")
 
-	// Send start command to Pixelmon EC2 instance
-	sess, err := getSession()
+	cfg, err := getConfig()
 	if err != nil {
 		return err
 	}
-	svc := ssm.New(sess)
+
+	// Delete Pixelmon DNS Entry
+	_, instance, err := getPixelmonServer(cfg)
+	if err != nil {
+		return err
+	}
+	deletePixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN"))
+
+	// Send start command to Pixelmon EC2 instance
+	client := ssm.NewFromConfig(cfg)
 	documentName := "AWS-RunShellScript"
-	params := map[string][]*string{
-		"commands": {aws.String("mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"stop\"")},
+	params := map[string][]string{
+		"commands": {"mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"stop\""},
 	}
 	input := &ssm.SendCommandInput{
-		InstanceIds:  []*string{aws.String(os.Getenv("PIXELMON_INSTANCE_ID"))},
+		InstanceIds:  []string{os.Getenv("PIXELMON_INSTANCE_ID")},
 		DocumentName: &documentName,
 		Parameters:   params,
 	}
-	_, err = svc.SendCommand(input)
+	_, err = client.SendCommand(context.TODO(), input)
 	if err != nil {
 		return err
 	}
 
+	for {
+		isOnline, _, err := mcstatus.GetMCStatus()
+		if err != nil {
+			return err
+		}
+
+		if !isOnline {
+			log.Printf("%v.%v is offline", os.Getenv("PIXELMON_SUBDOMAIN"), os.Getenv("PIXELMON_DOMAIN"))
+			time.Sleep(delay * time.Second)
+			break
+		}
+
+		log.Println("Waiting for Pixelmon service to stop...")
+		time.Sleep(delay * time.Second)
+	}
+
 	return nil
-}
-
-func getSession() (*session.Session, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(os.Getenv("PIXELMON_REGION")),
-	})
-	if err != nil {
-		log.Printf("Error creating AWS session: %v", err)
-		return nil, errors.New("error creating AWS session")
-	}
-
-	return sess, nil
-}
-
-func getPixelmonServer(sess *session.Session) (*ec2.EC2, *ec2.Instance, error) {
-	svc := ec2.New(sess)
-
-	input := &ec2.DescribeInstancesInput{
-		InstanceIds: []*string{
-			aws.String(os.Getenv("PIXELMON_INSTANCE_ID")),
-		},
-	}
-
-	result, err := svc.DescribeInstances(input)
-	if err != nil {
-		return nil, nil, errors.New(Message[Err_Status])
-	}
-
-	if len(result.Reservations) == 0 || len(result.Reservations[0].Instances) == 0 {
-		return nil, nil, errors.New(Message[Not_Found])
-	}
-
-	return svc, result.Reservations[0].Instances[0], nil
 }
