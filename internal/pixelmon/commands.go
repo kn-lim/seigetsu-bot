@@ -248,3 +248,62 @@ func StopPixelmon() error {
 
 	return nil
 }
+
+func AddToWhitelist(name string) error {
+	cfg, err := getConfig()
+	if err != nil {
+		return err
+	}
+
+	// Send start command to Pixelmon EC2 instance
+	client := ssm.NewFromConfig(cfg)
+	documentName := "AWS-RunShellScript"
+	params := map[string][]string{
+		"commands": {"mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"whitelist add " + name + "\""},
+	}
+	input := &ssm.SendCommandInput{
+		InstanceIds:  []string{os.Getenv("PIXELMON_INSTANCE_ID")},
+		DocumentName: &documentName,
+		Parameters:   params,
+	}
+	_, err = client.SendCommand(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetNumberOfPlayers() (int, error) {
+	_, num, err := mcstatus.GetMCStatus()
+	if err != nil {
+		return 0, err
+	}
+
+	return num, nil
+}
+
+func SendMessage(msg string) error {
+	cfg, err := getConfig()
+	if err != nil {
+		return err
+	}
+
+	// Send start command to Pixelmon EC2 instance
+	client := ssm.NewFromConfig(cfg)
+	documentName := "AWS-RunShellScript"
+	params := map[string][]string{
+		"commands": {"mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"say " + msg + "\""},
+	}
+	input := &ssm.SendCommandInput{
+		InstanceIds:  []string{os.Getenv("PIXELMON_INSTANCE_ID")},
+		DocumentName: &documentName,
+		Parameters:   params,
+	}
+	_, err = client.SendCommand(context.TODO(), input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

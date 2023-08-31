@@ -19,11 +19,19 @@ const (
 	Online = iota
 	Offline
 	Not_Found
-	Starting
-	Stopping
 	Err_Status
+	Starting
 	Err_Start
+	Stopping
 	Err_Stop
+	Whitelist
+	Success_Whitelist
+	Err_Whitelist
+	NumPlayers
+	Err_NumPlayers
+	SendingMessage
+	Success_SendingMessage
+	Err_SendingMessage
 )
 
 const (
@@ -38,14 +46,22 @@ var (
 	}
 
 	Message = []string{
-		":green_circle: Pixelmon is online :green_circle:",
-		":red_circle: Pixelmon is offline :red_circle:",
-		":grey_exclamation: No Pixelmon server was found :grey_exclamation:",
-		":green_square: Starting the Pixelmon server :green_square:",
-		":red_square: Stopping the Pixelmon server :red_square:",
-		":exclamation: Error checking Pixelmon's status :exclamation:",
-		":exclamation: Failed to start the Pixelmon server :exclamation:",
-		":exclamation: Failed to stop the Pixelmon server :exclamation:",
+		":green_circle:   Pixelmon is ONLINE",
+		":red_circle:   Pixelmon is OFFLINE",
+		":grey_exclamation:   No Pixelmon server was found",
+		":exclamation:   Error checking Pixelmon's status",
+		":green_square:   Starting the Pixelmon server",
+		":exclamation:  Failed to start the Pixelmon server",
+		":red_square:   Stopping the Pixelmon server",
+		":exclamation:   Failed to stop the Pixelmon server",
+		":green_square:   Sending command to whitelist ",
+		":green_circle:   Successfully sent command to whitelist ",
+		":exclamation:   Error sending command to whitelist ",
+		":green_circle:   Current Number of Players: ",
+		":exclamation:   Error getting number of players",
+		":green_square:   Sending command to say ",
+		":green_circle:   Successfully sent command to say ",
+		":exclamation:   Error sending command to say ",
 	}
 )
 
