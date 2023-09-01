@@ -5,8 +5,7 @@
 # seigetsu-bot
 
 ![Go](https://img.shields.io/github/go-mod/go-version/kn-lim/seigetsu-bot)
-[![Release](https://img.shields.io/github/v/release/kn-lim/seigetsu-bot)](https://github.com/kn-lim/seigetsu-bot/releases)
-![Build](https://github.com/kn-lim/seigetsu-bot/actions/workflows/release.yaml/badge.svg)
+![Build](https://github.com/kn-lim/seigetsu-bot/actions/workflows/build.yaml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kn-lim/seigetsu-bot)](https://goreportcard.com/report/github.com/kn-lim/seigetsu-bot)
 ![License](https://img.shields.io/github/license/kn-lim/seigetsu-bot)
 
