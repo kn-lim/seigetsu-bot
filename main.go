@@ -7,13 +7,13 @@ import (
 	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
+
 	"github.com/kn-lim/seigetsu-bot/internal/discord"
 )
 
 // Bot parameters
 var (
 	GuildID        = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
-	BotToken       = flag.String("token", "", "Bot access token")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutting down or not")
 )
 
@@ -23,7 +23,7 @@ func init() { flag.Parse() }
 
 func init() {
 	var err error
-	s, err = discordgo.New("Bot " + *BotToken)
+	s, err = discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
 	if err != nil {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}
@@ -53,6 +53,7 @@ func main() {
 		if err != nil {
 			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
 		}
+		log.Printf("Added '%v' command", v.Name)
 		registeredCommands[i] = cmd
 	}
 
@@ -70,6 +71,7 @@ func main() {
 			if err != nil {
 				log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
 			}
+			log.Printf("Removed '%v' command", v.Name)
 		}
 	}
 
