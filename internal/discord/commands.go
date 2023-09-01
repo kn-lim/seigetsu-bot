@@ -234,6 +234,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
+							Flags:   64,
 						},
 					})
 
@@ -244,6 +245,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
+							Flags:   64,
 						},
 					})
 
@@ -279,12 +281,12 @@ var (
 				if err := pixelmon.AddToWhitelist(username); err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-						Type: discordgo.InteractionResponseChannelMessageWithSource,
-						Data: &discordgo.InteractionResponseData{
-							Content: pixelmon.Message[pixelmon.Err_Whitelist],
-						},
+					_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+						Content: pixelmon.Message[pixelmon.Err_Whitelist],
 					})
+					if err != nil {
+						log.Fatalf("Error sending follow-up message: %v", err)
+					}
 
 					return
 				}
@@ -307,6 +309,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
+							Flags:   64,
 						},
 					})
 
@@ -317,6 +320,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
+							Flags:   64,
 						},
 					})
 
@@ -355,6 +359,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
+							Flags:   64,
 						},
 					})
 
@@ -365,6 +370,7 @@ var (
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
+							Flags:   64,
 						},
 					})
 
@@ -400,12 +406,12 @@ var (
 				if err := pixelmon.SendMessage(message); err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-						Type: discordgo.InteractionResponseChannelMessageWithSource,
-						Data: &discordgo.InteractionResponseData{
-							Content: pixelmon.Message[pixelmon.Err_SendingMessage],
-						},
+					_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+						Content: pixelmon.Message[pixelmon.Err_SendingMessage],
 					})
+					if err != nil {
+						log.Fatalf("Error sending follow-up message: %v", err)
+					}
 
 					return
 				}
