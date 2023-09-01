@@ -145,7 +145,9 @@ func StartPixelmon() error {
 	if err != nil {
 		return err
 	}
-	createPixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN"))
+	if err := createPixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN")); err != nil {
+		return err
+	}
 
 	log.Println("Sending command to Pixelmon EC2 instance...")
 
@@ -218,7 +220,9 @@ func StopPixelmon() error {
 	if err != nil {
 		return err
 	}
-	deletePixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN"))
+	if err := deletePixelmonDNSEntry(cfg, instance, os.Getenv("PIXELMON_HOSTED_ZONE_ID"), os.Getenv("PIXELMON_DOMAIN"), os.Getenv("PIXELMON_SUBDOMAIN")); err != nil {
+		return err
+	}
 
 	// Send start command to Pixelmon EC2 instance
 	client := ssm.NewFromConfig(cfg)

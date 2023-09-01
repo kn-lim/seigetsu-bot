@@ -69,12 +69,15 @@ var (
 		"pixelmon": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			requiredRoles, err := getRequiredRoleIDs(s, i)
 			if err != nil {
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: ":red_circle:   Error! Something went wrong with getting the required role IDs!",
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 
 				return
 			}
@@ -89,34 +92,43 @@ var (
 					msg = err.Error()
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: msg,
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 			case "start":
 				// log.Println("/pixelmon start")
 
 				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: "You don't have the required role to use this command!",
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: pixelmon.Message[pixelmon.Starting],
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 
 				// Start Pixelmon EC2 Instance
 				if err := pixelmon.Start(); err != nil {
@@ -157,23 +169,29 @@ var (
 
 				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: "You don't have the required role to use this command!",
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: pixelmon.Message[pixelmon.Stopping],
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 
 				// Stop Pixelmon service
 				if err := pixelmon.StopPixelmon(); err != nil {
@@ -214,13 +232,16 @@ var (
 
 				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: "You don't have the required role to use this command!",
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
@@ -230,24 +251,30 @@ var (
 				if err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 				if !isOnline {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
@@ -270,12 +297,15 @@ var (
 					}
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: pixelmon.Message[pixelmon.Whitelist] + "`" + username + "`",
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 
 				// Add name to whitelist
 				if err := pixelmon.AddToWhitelist(username); err != nil {
@@ -305,24 +335,30 @@ var (
 				if err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 				if !isOnline {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
@@ -331,22 +367,28 @@ var (
 				if err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_NumPlayers],
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: pixelmon.Message[pixelmon.NumPlayers] + strconv.Itoa(num),
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 			case "say":
 				// log.Println("/pixelmon say")
 
@@ -355,24 +397,30 @@ var (
 				if err != nil {
 					log.Printf("Error: %v", err)
 
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Err_Status],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
 				if !isOnline {
-					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 							Flags:   64,
 						},
 					})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					}
 
 					return
 				}
@@ -395,12 +443,15 @@ var (
 					}
 				}
 
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Content: pixelmon.Message[pixelmon.SendingMessage] + "`" + message + "`",
 					},
 				})
+				if err != nil {
+					log.Printf("Error: %v", err)
+				}
 
 				// Send message
 				if err := pixelmon.SendMessage(message); err != nil {
