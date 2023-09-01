@@ -10,4 +10,3 @@ FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /app/seigetsu-bot .
 ENTRYPOINT ["./seigetsu-bot"]
-CMD ["-token", "$DISCORD_BOT_TOKEN"]

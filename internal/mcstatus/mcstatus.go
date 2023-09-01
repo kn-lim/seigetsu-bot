@@ -16,6 +16,7 @@ type MCStatusResponse struct {
 	} `json:"players"`
 }
 
+// GetMCStatus checks with mcstatus.io to get information about the Minecraft server
 func GetMCStatus() (bool, int, error) {
 	serverURL := fmt.Sprintf("%v.%v", os.Getenv("PIXELMON_SUBDOMAIN"), os.Getenv("PIXELMON_DOMAIN"))
 	if serverURL == "" {

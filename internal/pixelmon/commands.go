@@ -12,6 +12,7 @@ import (
 	"github.com/kn-lim/seigetsu-bot/internal/mcstatus"
 )
 
+// GetStatus returns whether the EC2 instance is online or offline
 func GetStatus() (string, error) {
 	// Setup AWS Session
 	cfg, err := getConfig()
@@ -32,6 +33,7 @@ func GetStatus() (string, error) {
 	return Message[Offline], nil
 }
 
+// Start turns on the EC2 instance
 func Start() error {
 	log.Println("Starting Pixelmon EC2 instance...")
 
@@ -67,6 +69,7 @@ func Start() error {
 	return nil
 }
 
+// Stop turns off the EC2 instance
 func Stop() error {
 	log.Println("Stopping Pixelmon EC2 instance")
 
@@ -102,6 +105,7 @@ func Stop() error {
 	return nil
 }
 
+// StartPixelmon turns on the Pixelmon Minecraft service
 func StartPixelmon() error {
 	log.Println("Starting Pixelmon service...")
 
@@ -163,6 +167,7 @@ func StartPixelmon() error {
 
 	log.Println("Sent command to Pixelmon EC2 instance")
 
+	// Check if Minecraft service is online
 	for {
 		isOnline, _, err := mcstatus.GetMCStatus()
 		if err != nil {
@@ -183,6 +188,7 @@ func StartPixelmon() error {
 	return nil
 }
 
+// StopPixelmon turns off the Pixelmon Minecraft service
 func StopPixelmon() error {
 	log.Println("Stopping Pixelmon service")
 
@@ -230,6 +236,7 @@ func StopPixelmon() error {
 		return err
 	}
 
+	// Checks if Minecraft service is offline
 	for {
 		isOnline, _, err := mcstatus.GetMCStatus()
 		if err != nil {
@@ -249,7 +256,8 @@ func StopPixelmon() error {
 	return nil
 }
 
-func AddToWhitelist(name string) error {
+// AddToWhitelist takes a username and runs the /whitelist add command
+func AddToWhitelist(username string) error {
 	cfg, err := getConfig()
 	if err != nil {
 		return err
@@ -259,7 +267,7 @@ func AddToWhitelist(name string) error {
 	client := ssm.NewFromConfig(cfg)
 	documentName := "AWS-RunShellScript"
 	params := map[string][]string{
-		"commands": {"mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"whitelist add " + name + "\""},
+		"commands": {"mcrcon -H localhost -p " + os.Getenv("RCON_PASSWORD") + " \"whitelist add " + username + "\""},
 	}
 	input := &ssm.SendCommandInput{
 		InstanceIds:  []string{os.Getenv("PIXELMON_INSTANCE_ID")},
@@ -274,6 +282,7 @@ func AddToWhitelist(name string) error {
 	return nil
 }
 
+// GetNumberOfPlayers gets the number of online players on the Minecraft server
 func GetNumberOfPlayers() (int, error) {
 	_, num, err := mcstatus.GetMCStatus()
 	if err != nil {
@@ -283,6 +292,7 @@ func GetNumberOfPlayers() (int, error) {
 	return num, nil
 }
 
+// SendMessage takes a message and runs the /say command
 func SendMessage(msg string) error {
 	cfg, err := getConfig()
 	if err != nil {

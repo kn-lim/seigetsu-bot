@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/kn-lim/seigetsu-bot/internal/mcstatus"
 	"github.com/kn-lim/seigetsu-bot/internal/pixelmon"
 )
 
@@ -71,15 +72,18 @@ var (
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: "Error! Something went wrong!",
+						Content: ":red_circle:   Error! Something went wrong with getting the required role IDs!",
 					},
 				})
+
+				return
 			}
 
 			switch i.ApplicationCommandData().Options[0].Name {
 			case "status":
 				// log.Println("/pixelmon status")
 
+				// Get status
 				msg, err := pixelmon.GetStatus()
 				if err != nil {
 					msg = err.Error()
@@ -94,6 +98,7 @@ var (
 			case "start":
 				// log.Println("/pixelmon start")
 
+				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -102,6 +107,7 @@ var (
 							Flags:   64,
 						},
 					})
+
 					return
 				}
 
@@ -122,6 +128,8 @@ var (
 					if err != nil {
 						log.Fatalf("Error sending follow-up message: %v", err)
 					}
+
+					return
 				}
 
 				// Start Pixelmon service
@@ -134,6 +142,8 @@ var (
 					if err != nil {
 						log.Fatalf("Error sending follow-up message: %v", err)
 					}
+
+					return
 				}
 
 				_, err := s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
@@ -145,6 +155,7 @@ var (
 			case "stop":
 				// log.Println("/pixelmon stop")
 
+				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -153,6 +164,7 @@ var (
 							Flags:   64,
 						},
 					})
+
 					return
 				}
 
@@ -173,6 +185,8 @@ var (
 					if err != nil {
 						log.Fatalf("Error sending follow-up message: %v", err)
 					}
+
+					return
 				}
 
 				// Stop Pixelmon EC2 Instance
@@ -185,6 +199,8 @@ var (
 					if err != nil {
 						log.Fatalf("Error sending follow-up message: %v", err)
 					}
+
+					return
 				}
 
 				_, err := s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
@@ -196,6 +212,7 @@ var (
 			case "whitelist":
 				// log.Println("/pixelmon whitelist")
 
+				// Check if user has the required role to use command
 				if !checkForMinecraftersRole(requiredRoles, s, i) {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -204,11 +221,12 @@ var (
 							Flags:   64,
 						},
 					})
+
 					return
 				}
 
 				// Check if server is online
-				msg, err := pixelmon.GetStatus()
+				isOnline, _, err := mcstatus.GetMCStatus()
 				if err != nil {
 					log.Printf("Error: %v", err)
 
@@ -218,28 +236,47 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_Status],
 						},
 					})
+
+					return
 				}
-				if msg == pixelmon.Message[pixelmon.Offline] {
+				if !isOnline {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 						},
 					})
+
+					return
 				}
 
-				// Get name to whitelist
-				name := i.ApplicationCommandData().Options[0].StringValue()
+				// Get username to whitelist
+				var username string
+				options := i.ApplicationCommandData().Options
+				for _, option := range options {
+					if option.Name == "whitelist" {
+						for _, subOption := range option.Options {
+							if subOption.Name == "username" {
+								username = subOption.StringValue()
+								break
+							}
+						}
+					}
+
+					if username != "" {
+						break
+					}
+				}
 
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: pixelmon.Message[pixelmon.Whitelist] + "`" + name + "`",
+						Content: pixelmon.Message[pixelmon.Whitelist] + "`" + username + "`",
 					},
 				})
 
 				// Add name to whitelist
-				if err := pixelmon.AddToWhitelist(name); err != nil {
+				if err := pixelmon.AddToWhitelist(username); err != nil {
 					log.Printf("Error: %v", err)
 
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -248,10 +285,12 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_Whitelist],
 						},
 					})
+
+					return
 				}
 
 				_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-					Content: pixelmon.Message[pixelmon.Success_Whitelist] + "`" + name + "`",
+					Content: pixelmon.Message[pixelmon.Success_Whitelist] + "`" + username + "`",
 				})
 				if err != nil {
 					log.Fatalf("Error sending follow-up message: %v", err)
@@ -260,7 +299,7 @@ var (
 				// log.Println("/pixelmon online")
 
 				// Check if server is online
-				msg, err := pixelmon.GetStatus()
+				isOnline, _, err := mcstatus.GetMCStatus()
 				if err != nil {
 					log.Printf("Error: %v", err)
 
@@ -270,14 +309,18 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_Status],
 						},
 					})
+
+					return
 				}
-				if msg == pixelmon.Message[pixelmon.Offline] {
+				if !isOnline {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 						},
 					})
+
+					return
 				}
 
 				num, err := pixelmon.GetNumberOfPlayers()
@@ -290,6 +333,8 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_NumPlayers],
 						},
 					})
+
+					return
 				}
 
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -302,7 +347,7 @@ var (
 				// log.Println("/pixelmon say")
 
 				// Check if server is online
-				msg, err := pixelmon.GetStatus()
+				isOnline, _, err := mcstatus.GetMCStatus()
 				if err != nil {
 					log.Printf("Error: %v", err)
 
@@ -312,28 +357,47 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_Status],
 						},
 					})
+
+					return
 				}
-				if msg == pixelmon.Message[pixelmon.Offline] {
+				if !isOnline {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: pixelmon.Message[pixelmon.Offline],
 						},
 					})
+
+					return
 				}
 
 				// Get message to send
-				msg = i.ApplicationCommandData().Options[0].StringValue()
+				var message string
+				options := i.ApplicationCommandData().Options
+				for _, option := range options {
+					if option.Name == "say" {
+						for _, subOption := range option.Options {
+							if subOption.Name == "message" {
+								message = subOption.StringValue()
+								break
+							}
+						}
+					}
+
+					if message != "" {
+						break
+					}
+				}
 
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
-						Content: pixelmon.Message[pixelmon.SendingMessage] + "`" + msg + "`",
+						Content: pixelmon.Message[pixelmon.SendingMessage] + "`" + message + "`",
 					},
 				})
 
 				// Send message
-				if err := pixelmon.SendMessage(msg); err != nil {
+				if err := pixelmon.SendMessage(message); err != nil {
 					log.Printf("Error: %v", err)
 
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -342,10 +406,12 @@ var (
 							Content: pixelmon.Message[pixelmon.Err_SendingMessage],
 						},
 					})
+
+					return
 				}
 
 				_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-					Content: pixelmon.Message[pixelmon.Success_SendingMessage] + "`" + msg + "`",
+					Content: pixelmon.Message[pixelmon.Success_SendingMessage] + "`" + message + "`",
 				})
 				if err != nil {
 					log.Fatalf("Error sending follow-up message: %v", err)

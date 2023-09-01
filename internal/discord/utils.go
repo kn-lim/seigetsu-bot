@@ -5,6 +5,7 @@ import (
 	"github.com/kn-lim/seigetsu-bot/internal/pixelmon"
 )
 
+// getRequiredRoleIDs gets the role IDs of roles required for users to run certain commands
 func getRequiredRoleIDs(s *discordgo.Session, i *discordgo.InteractionCreate) (map[string]string, error) {
 	if len(pixelmon.RequiredRoleNames) == 0 {
 		return nil, nil
@@ -28,6 +29,7 @@ func getRequiredRoleIDs(s *discordgo.Session, i *discordgo.InteractionCreate) (m
 	return requiredRoles, nil
 }
 
+// checkForMinecraftersRole checks to see if the user has the Minecrafters role
 func checkForMinecraftersRole(requiredRoles map[string]string, s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 	hasRole := false
 	for _, roleID := range i.Member.Roles {
