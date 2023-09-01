@@ -1,5 +1,5 @@
 <p align="center">
-  <img width=100 src="https://github.com/kn-lim/seigetsu-bot/blob/main/images/seigetsu.png?raw=true"></img>
+  <img width=100 style="border-radius: 50%" src="https://github.com/kn-lim/seigetsu-bot/blob/main/images/seigetsu.png?raw=true"></img>
 </p>
 
 # seigetsu-bot
