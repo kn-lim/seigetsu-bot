@@ -11,6 +11,8 @@
 
 A personal Discord bot to handle miscellaneous tasks.
 
+Docker Hub: https://hub.docker.com/r/knlim/seigetsu-bot
+
 ## Packages Used
 
 - [discordgo](https://github.com/bwmarrin/discordgo/)
