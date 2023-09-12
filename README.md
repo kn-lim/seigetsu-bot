@@ -32,5 +32,5 @@ Docker Hub: https://hub.docker.com/r/knlim/seigetsu-bot
 | `PIXELMON_INSTANCE_ID` | AWS Instance ID of Pixelmon EC2 Instance |
 | `PIXELMON_REGION` | AWS Region of Pixelmon EC2 Instance |
 | `PIXELMON_HOSTED_ZONE_ID` | AWS Hosted Zone ID of Domain |
-| `PIXEMON_DOMAIN` | Domain of Pixelmon Server |
-| `PIXEMON_SUBDOMAIN` | Subdomain of Pixelmon Server |
+| `PIXELMON_DOMAIN` | Domain of Pixelmon Server |
+| `PIXELMON_SUBDOMAIN` | Subdomain of Pixelmon Server |
