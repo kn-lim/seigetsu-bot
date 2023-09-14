@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/kn-lim/seigetsu-bot/internal/discord"
+	"github.com/kn-lim/seigetsu-bot/internal/pixelmon"
 )
 
 // Bot parameters
@@ -56,6 +57,8 @@ func main() {
 		log.Printf("Added '%v' command", v.Name)
 		registeredCommands[i] = cmd
 	}
+
+	go pixelmon.CheckForOnlinePlayers(s)
 
 	defer s.Close()
 

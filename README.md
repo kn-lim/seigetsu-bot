@@ -20,13 +20,14 @@ Docker Hub: https://hub.docker.com/r/knlim/seigetsu-bot
 
 ## Current Uses
 
-- Manages a Pixelmon Minecraft server
+- Manages a Pixelmon Minecraft server using slash commands
 
 ## Environment Variables
 
 | Name | Description |
 |-|-|
 | `DISCORD_BOT_TOKEN` | Discord Bot Token |
+| `DISCORD_BOT_MSG_CHANNEL_ID` | Discord Channel for Bot Messages |
 | `RCON_PASSWORD` | RCON Password of Pixelmon Service |
 | `PIXELMON_NAME` | AWS Name Tag of Pixelmon EC2 Instance |
 | `PIXELMON_INSTANCE_ID` | AWS Instance ID of Pixelmon EC2 Instance |

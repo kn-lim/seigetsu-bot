@@ -187,6 +187,9 @@ func StartPixelmon() error {
 
 	log.Println("Started Pixelmon service")
 
+	// Set online flag to true
+	online = true
+
 	return nil
 }
 
@@ -239,6 +242,9 @@ func StopPixelmon() error {
 	if err != nil {
 		return err
 	}
+
+	// Set online flag to false
+	online = false
 
 	// Checks if Minecraft service is offline
 	for {
